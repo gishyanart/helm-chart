@@ -1,0 +1,65 @@
+{{- if .Values.rqDashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rq.dashboardName" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+    {{- include "rq.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "rq.dashboardName" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "rq.dashboardName" . }}
+        {{- include "rq.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: rq-dashboard
+          image: {{ .Values.rqDashboard.image }}
+          imagePullPolicy: Always
+          args:
+          - '-u'
+          {{- if .Values.global.existingRedisHost }}
+          - {{ printf "redis://:%s@%s:%s" .Values.global.existingRedisHost.password .Values.global.existingRedisHost.host .Values.global.existingRedisHost.port | quote }}
+          {{- else }}
+          - {{ printf "redis://%s.%s.%s" (include "rq.redisName" .) (include "rq.namespace" .) "svc.cluster.local" | quote }}
+          {{- end }}
+          {{- if .Values.rqDashboard.deployment.addArgs }}
+          {{- range $value := .Values.rqDashboard.deployment.addArgs }}
+          - {{ $value  | quote }}
+          {{- end }}
+          {{- end }}
+          ports:
+            - containerPort: 9181
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9181
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9181
+          {{- if .Values.rqDashboard.deployment.resources }}
+          resources:
+            {{- toYaml .Values.rqDashboard.deployment.resources | nindent 12 }}
+          {{- end }}
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{/*
+*/}}

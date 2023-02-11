@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rq.dashboardName" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+    app: {{ include "rq.dashboardName" . }}
+    {{- include "rq.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.rqDashboard.service.type }}
+  ports:
+    - port: {{ .Values.rqDashboard.service.port }}
+      targetPort: 9181
+      protocol: TCP
+  selector:
+    app: {{ include "rq.dashboardName" . }}

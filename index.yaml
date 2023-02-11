@@ -1,0 +1,24 @@
+apiVersion: v1
+entries:
+  rq:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2023-02-11T18:23:43.974991309+04:00"
+    description: Python RQ Kubernetes deployment
+    digest: 6e8c50f837ad733a16a286f96c3fa793a508a32386dd8d7e09634de87dd03995
+    keywords:
+    - python
+    - queue
+    - rq
+    - redis
+    - dashboard
+    kubeVersion: '>= 1.19.0-0'
+    name: rq
+    sources:
+    - https://github.com/rq/rq
+    - https://github.com/Parallels/rq-dashboard
+    type: application
+    urls:
+    - https://gishyanart.github.io/helm-chart/rq-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-02-11T18:23:43.974426036+04:00"

@@ -1,0 +1,18 @@
+{{- if not .Values.global.existingRedisHost }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rq.redisName" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+  {{- include "rq.labels" . | nindent 4 }}
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: {{ printf "%s-%s" ( include "rq.redisName" .) "0" }}
+  ports:
+  - port: 6379
+    name: redis
+  clusterIP: None
+{{- end }}
+{{/*
+*/}}

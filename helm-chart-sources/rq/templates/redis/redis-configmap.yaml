@@ -1,0 +1,51 @@
+{{- if not .Values.global.existingRedisHost }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rq.redisName" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+  {{- include "rq.labels" . | nindent 4 }}
+data:
+  redis.conf: |-
+    port 6379
+    appendonly yes
+    protected-mode no
+    timeout 180
+    tcp-keepalive 0
+    databases 3
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    slave-serve-stale-data yes
+    slave-read-only yes
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    repl-ping-slave-period 10
+    repl-timeout 60
+    repl-disable-tcp-nodelay no
+    slave-priority 100
+    maxmemory-policy allkeys-lru
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    lua-time-limit 5000
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    latency-monitor-threshold 0
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit slave 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    aof-rewrite-incremental-fsync yes
+    maxmemory 4gb
+{{- end }}
+{{/*
+*/}}

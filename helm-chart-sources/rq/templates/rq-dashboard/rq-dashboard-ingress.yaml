@@ -1,0 +1,43 @@
+{{- if ( and .Values.rqDashboard.enabled .Values.rqDashboard.ingress.enabled ) }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "rq.dashboardName" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+  {{- include "rq.labels" . | nindent 4 }}
+  {{- if .Values.rqDashboard.ingress.labels }}
+    {{- toYaml .Values.rqDashboard.ingress.labels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.rqDashboard.ingress.annotations }}
+  annotations:
+    {{- toYaml .Values.rqDashboard.ingress.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.rqDashboard.ingress.ingressClass }}
+  ingressClassName: {{ .Values.rqDashboard.ingress.ingressClass }}
+  {{- end }}  
+  rules:
+  {{- if .Values.rqDashboard.ingress.host }}
+  - host: {{ .Values.rqDashboard.ingress.host }}
+  {{- else }}
+  {{- fail "rqDashboard.ingress.host must be set if rqDashboard.ingress.enabled is True"}}
+  {{- end }}
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ include "rq.dashboardName" . }}
+              port:
+                number: {{ default "9181" .Values.rqDashboard.service.port }}
+  {{- if .Values.rqDashboard.ingress.tls.enabled }}
+  tls:
+    - hosts:
+      - {{ .Values.rqDashboard.ingress.host }}
+      secretName: {{ default ( printf "%s-%s" (include "rq.dashboardName" .) "tls-secret" ) .Values.rqDashboard.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}
+{{/*
+*/}}

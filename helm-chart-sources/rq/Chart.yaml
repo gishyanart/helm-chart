@@ -1,0 +1,17 @@
+apiVersion: v2
+name: "rq"
+version: 0.1.0
+kubeVersion: '>= 1.19.0-0'
+description: Python RQ Kubernetes deployment
+sources:
+  - https://github.com/rq/rq
+  - https://github.com/Parallels/rq-dashboard
+type: application
+keywords:
+  - "python"
+  - "queue"
+  - "rq"
+  - "redis"
+  - "dashboard"
+appVersion: "0.1.0"
+

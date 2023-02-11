@@ -1,0 +1,73 @@
+{{- if not .Values.global.existingRedisHost }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-rq-redis
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+  {{- include "rq.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      statefulset.kubernetes.io/pod-name: {{ printf "%s-%s" ( include "rq.redisName" .) "0" }}
+  serviceName: {{ include "rq.redisName" . }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "rq.labels" . | nindent 8 }}
+        statefulset.kubernetes.io/pod-name: {{ printf "%s-%s" ( include "rq.redisName" . ) "0" }}
+    spec:
+      {{- if .Values.global.affinity }}
+      affinity: 
+        {{- .Values.global.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.global.tolerations }}
+      tolerations: 
+        {{- .Values.global.tolerations| nindent 8 }}
+      {{- end }}
+      {{- if .Values.global.nodeSelector }}
+      nodeSelector: 
+        {{- .Values.global.nodeSelector| nindent 8 }}
+      {{- end }}
+      containers:
+      - name: redis
+        image: redis:7.0.8-bullseye
+        ports:
+        - name: redis
+          containerPort: 6379
+          protocol: TCP
+        command:
+        - redis-server
+        args: 
+        - "/etc/redis/redis.conf"
+        volumeMounts:
+          - name: redis-conf
+            mountPath: /etc/redis
+          - name: redis-data
+            mountPath: /data
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits: 
+            cpu: "200m"
+            memory: "512Mi"
+      volumes:
+        - name: redis-conf
+          configMap:
+            name: {{ .Release.Name }}-rq-redis
+            items:
+              - key: redis.conf
+                path: redis.conf
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: "4Gi"
+{{- end }}
+{{/*
+*/}}

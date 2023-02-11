@@ -1,0 +1,270 @@
+---
+# Source: rq/templates/rq/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release-name-rq
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: rq/templates/redis/redis-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-rq-redis
+  namespace: default
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  redis.conf: |-
+    port 6379
+    appendonly yes
+    protected-mode no
+    timeout 180
+    tcp-keepalive 0
+    databases 3
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    slave-serve-stale-data yes
+    slave-read-only yes
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    repl-ping-slave-period 10
+    repl-timeout 60
+    repl-disable-tcp-nodelay no
+    slave-priority 100
+    maxmemory-policy allkeys-lru
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    lua-time-limit 5000
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    latency-monitor-threshold 0
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit slave 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    aof-rewrite-incremental-fsync yes
+    maxmemory 4gb
+---
+# Source: rq/templates/redis/redis-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-rq-redis
+  namespace: default
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: release-name-rq-redis-0
+  ports:
+  - port: 6379
+    name: redis
+  clusterIP: None
+---
+# Source: rq/templates/rq-dashboard/rq-dashboard-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-rq-dashboard
+  namespace: default
+  labels:
+    app: release-name-rq-dashboard
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 9181
+      protocol: TCP
+      name: http
+  selector:
+    app: release-name-rq-dashboard
+---
+# Source: rq/templates/rq-dashboard/rq-dashboard-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-rq-dashboard
+  namespace: default
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: release-name-rq-dashboard
+  template:
+    metadata:
+      labels:
+        app: release-name-rq-dashboard
+        helm.sh/chart: rq-0.1.0
+        app.kubernetes.io/name: release-name-rq
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      containers:
+        - name: rqDashboard
+          image: eoranged/rq-dashboard
+          imagePullPolicy: Always
+          args:
+          - '-H'
+          - "redis://release-name-rq-redis.default.svc.cluster.local"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: rq/templates/rq/rq-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-rq
+  namespace: default
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: release-name-rq
+  template:
+    metadata:
+      labels:
+        app: release-name-rq
+        helm.sh/chart: rq-0.1.0
+        app.kubernetes.io/name: release-name-rq
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      containers:
+        - name: rq
+          image: gnuni/rq
+          imagePullPolicy: Always
+          args:
+          - "-u"
+          - "redis://release-name-rq-redis.default.svc.cluster.local"
+          resources:
+            limits:
+              cpu: 400m
+              memory: 512Mi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+---
+# Source: rq/templates/redis/redis-sts.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: release-name-rq-redis
+  namespace: default
+  labels:
+    helm.sh/chart: rq-0.1.0
+    app.kubernetes.io/name: release-name-rq
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      statefulset.kubernetes.io/pod-name: release-name-rq-redis-0
+  serviceName: release-name-rq-redis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: rq-0.1.0
+        app.kubernetes.io/name: release-name-rq
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/managed-by: Helm
+        statefulset.kubernetes.io/pod-name: release-name-rq-redis-0
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.0.8-bullseye
+        ports:
+        - name: redis
+          containerPort: 6379
+          protocol: TCP
+        command:
+        - redis-server
+        args: 
+        - "/etc/redis/redis.conf"
+        volumeMounts:
+          - name: redis-conf
+            mountPath: /etc/redis
+          - name: redis-data
+            mountPath: /data
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits: 
+            cpu: "200m"
+            memory: "512Mi"
+      volumes:
+        - name: redis-conf
+          configMap:
+            name: release-name-rq-redis
+            items:
+              - key: redis.conf
+                path: redis.conf
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        resources:
+          requests:
+            storage: "4Gi"

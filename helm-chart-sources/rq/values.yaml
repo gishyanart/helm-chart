@@ -1,0 +1,115 @@
+## @section Global parameters
+##
+global:
+  ## @param global.namespaceOverride Override release namespace and deploy resources on that namespace
+  ##
+  namespaceOverride: ""
+  ## @param global.nodeSelector node selector for pods, will be applied to any pod created by this chart
+  ##
+  nodeSelector: {}
+  ## @param global.affinity affinity for pods, will be applied to any pod created by this chart
+  ##
+  affinity: {}
+  ## @param global.tolerations tolerations for pods, will be applied to any pod created by this chart
+  ##
+  tolerations: []
+  ## @param global.existingRedisHost Parameters of the existing redis host to use for rq, if not specified single pod redis statefulset will be deployed
+  ##
+  existingRedisHost: {}
+  # existingRedisHost:
+  #   host: ""
+  #   port: ""
+  #   password: ""
+
+## @section RQ Dashboard parameters
+##
+rqDashboard:
+  ## @param rqDashboard.enabled enable/disable RQ dashboard
+  ##
+  enabled: True
+  ## @param rqDashboard.image Docker image of the rq dashboard
+  ##
+  image: "eoranged/rq-dashboard"
+  deployment:
+    ## @skip rqDashboard.deployment.annotations
+    ## -- Annotations for rq dashboard deployment
+    annotations: {}
+    ## @skip rqDashboard.deployment.labels
+    ## -- Additional labels for rq dashboard deployment
+    labels: {}
+    ## @param rqDashboard.deployment.resources Kubernetes resources definition for rq dashboard container
+    ##
+    resources: {}
+    # resources:
+    #   requests:
+    #     cpu: "100m"
+    #     memory: "128Mi"
+    #   limits: 
+    #     cpu: "200m"
+    #     memory: "256Mi"
+
+    ## @param rqDashboard.deployment.addArgs Additional arguments to pass to the pod command, by default only `--redis-url` is genereated for Redis connection
+    ##
+    addArgs: []
+  service: 
+    ## @param rqDashboard.service.type Service type of the rq dashboard
+    ##
+    type: ClusterIP
+    ## @param rqDashboard.service.port On which port rq dashboard service must serve
+    ##
+    port: 80
+  ingress:
+    ## @param rqDashboard.ingress.enabled Whether to create ingress resource for rq dashboard or not
+    ##
+    enabled: False
+    ## @skip rqDashboard.ingress.annotations
+    ## -- Annotations for the ingress resources
+    annotations: {}
+    ## @skip rqDashboard.ingress.labels
+    ## -- Labels for the ingress resources
+    labels: {}
+    ## @param rqDashboard.ingress.ingressClass IngressClass name of the ingress resource
+    ##
+    ingressClass: ""
+    ## @param rqDashboard.ingress.host On which host to serve, required if ingress is enabled
+    ##
+    host: ""
+    tls:
+      ## @param rqDashboard.ingress.tls.enabled Whether to enable TLS support for ingress or not
+      ##
+      enabled: False
+      ## @param rqDashboard.ingress.tls.secretName TLS secret name of the ingress resource
+      secretName: ""
+
+## RQ parameters
+##
+rq:
+  ## @param rq.image Docker image for rq workers
+  ##
+  image: "gnuni/rq:1.12.0"
+  ## @param rq.serviceAccountName ServiceAccount name for rq workers, if not specified `default` will be used
+  ##
+  serviceAccountName:
+  deployment:
+    ## @skip rq.deployment.annotations
+    ## -- Annotations for rq worker Deployment
+    annotations: {}
+    ## @skip rq.deployment.labels
+    ## -- Labels for rq worker Deployment
+    labels: {}
+    ## @param rq.deployment.replicas Pod replica count of rq workers
+    replicas: 2
+    ## @param rq.deployment.resources Kubernetes resources definition for rq worker containers
+    ##
+    resources: {}
+    # resources:
+    #   requests:
+    #     cpu: "200m"
+    #     memory: "256Mi"
+    #   limits: 
+    #     cpu: "400m"
+    #     memory: "512Mi"
+
+    ## @param rq.deployment.addArgs Additional arguments to pass to the pod command, by default only `--url` is genereated for Redis connection
+    ##
+    addArgs: []

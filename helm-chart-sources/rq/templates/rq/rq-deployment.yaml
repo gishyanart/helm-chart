@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rq.name" . }}
+  namespace: {{ include "rq.namespace" . }}
+  labels:
+    {{- include "rq.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.rq.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "rq.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "rq.name" . }}
+        {{- include "rq.labels" . | nindent 8 }}
+    spec:
+      {{- if .Values.rq.serviceAccountName }}
+      serviceAccountName: {{ .Values.rq.serviceAccountName }}
+      {{- end }}
+      containers:
+        - name: rq
+          image: {{ .Values.rq.image }}
+          imagePullPolicy: Always
+          args:
+          - "-u"
+          {{- if .Values.global.existingRedisHost }}
+          - {{ printf "redis://:%s@%s:%s" .Values.global.existingRedisHost.password .Values.global.existingRedisHost.host .Values.global.existingRedisHost.port | quote }}
+          {{- else }}
+          - {{ printf "redis://%s.%s.%s" (include "rq.redisName" . ) (include "rq.namespace" . ) "svc.cluster.local" | quote }}
+          {{- end }}
+          {{- if .Values.rq.deployment.addArgs }}
+          {{- range $value := .Values.rq.deployment.addArgs }}
+          - {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.rq.deployment.resources }}
+          resources:
+            {{- toYaml .Values.rq.deployment.resources | nindent 12 }}
+          {{- end }}
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{/*
+*/}}
