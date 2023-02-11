@@ -3,9 +3,9 @@ entries:
   rq:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2023-02-11T18:23:43.974991309+04:00"
+    created: "2023-02-11T18:27:52.331215168+04:00"
     description: Python RQ Kubernetes deployment
-    digest: 6e8c50f837ad733a16a286f96c3fa793a508a32386dd8d7e09634de87dd03995
+    digest: 4f7440417ce093e4eb1f57a72483161f7a0018cca7edbb951c73127575615ea9
     keywords:
     - python
     - queue
@@ -21,4 +21,4 @@ entries:
     urls:
     - https://gishyanart.github.io/helm-chart/rq-0.1.0.tgz
     version: 0.1.0
-generated: "2023-02-11T18:23:43.974426036+04:00"
+generated: "2023-02-11T18:27:52.330582895+04:00"

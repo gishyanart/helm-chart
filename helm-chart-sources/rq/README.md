@@ -12,7 +12,7 @@ This chart deploys Python RQ and RQ Dashboard on your K8s cluster
 ### Add helm repo
 
 ```bash
-helm repo add rq https://gishyanart.github.io/helm-chart/
+helm repo add somerepo https://gishyanart.github.io/helm-chart/
 ```
 
 ```bash
